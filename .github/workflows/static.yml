@@ -1,0 +1,1573 @@
+	<!DOCTYPE html>
+	<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>PIP-Boy 3000</title>
+		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+		<style>
+			@font-face {
+				font-family: Pipboy;
+				src: url('../monofonto.ttf'); /* Ensure this path is correct */
+			}
+
+			body {
+				font-family: Pipboy, monospace;
+				color: #14fe17;
+				background: #272b23;
+				margin: 0;
+				padding: 0;
+				font-size: 16px;
+				animation: flicker 0.5s infinite alternate;
+				overflow-x: hidden;
+			}
+
+			@keyframes flicker {
+				0% { opacity: 0.9; }
+				50% { opacity: 1; }
+				100% { opacity: 0.9; }
+			}
+
+			/* Screen effects */
+			body:after {
+				height: 100%;
+				width: 100%;
+				content: "";
+				position: absolute;
+				top: 0px;
+				left: 0px;
+				background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.4) 1px, transparent 1px, transparent 2px);
+				opacity: 0.3;
+				z-index: 1000000;
+				pointer-events: none;
+			}
+
+			body:before {
+				content: "";
+				position: fixed;
+				top: 0;
+				left: 0;
+				right: 0;
+				bottom: 0;
+				background: radial-gradient(ellipse at center, 
+							rgba(20,254,23,0.1) 0%,
+							rgba(20,254,23,0) 60%);
+				pointer-events: none;
+				z-index: 999;
+			}
+
+			.navbar {
+				border-bottom: 2px solid #14fe17;
+				margin: 0px 10px;
+			}
+
+			.navbar.navbar-light:before,
+			.navbar.navbar-light:after {
+				height: 7px;
+				width: 2px;
+				content: "";
+				position: absolute;
+				display: block;
+				z-index: 5000;
+				background: #14fe17;
+				bottom: -8px;
+			}
+
+			.navbar.navbar-light:before {
+				left: 0px;
+			}
+
+			.navbar.navbar-light:after {
+				right: 0px;
+			}
+
+			ul>li.nav-item>a.nav-link,
+			ul>li.nav-item.active>a.nav-link {
+				color: #14fe17 !important;
+				font-size: 32px;
+				line-height: 22px;
+				transition: all 0.2s ease;
+				text-shadow: 0 0 0px #14fe17;
+			}
+
+			ul>li.nav-item>a.nav-link:hover {
+				text-shadow: 0 0 8px #14fe17;
+				transform: scale(1.05);
+			}
+
+			ul>li.nav-item.active::before {
+				content: "";
+				position: absolute;
+				width: 100%;
+				height: 22px;
+				top: 18px;
+				left: 0px;
+				background: #272b23;
+				border-left: 2px solid;
+				border-right: 2px solid;
+				border-top: 2px solid;
+			}
+
+			.navbar-light ul.navbar-nav>li.nav-item>.nav-link,
+			.navbar-light ul.navbar-nav>li.nav-item.active>.nav-link {
+				text-align: center;
+				margin: auto;
+				font-size: 32px;
+				line-height: 22px;
+				padding-bottom: 0px;
+				z-index: 50;
+				position: relative;
+				background: #272b23;
+			}
+
+			.navbar-nav {
+				width: 100%;
+			}
+
+			.navbar-light ul.navbar-nav>li {
+				display: block;
+				position: relative;
+				width: 100%;
+			}
+
+			.center-image {
+				position: absolute;
+				margin-left: 100px;
+			}
+
+			.center-image img {
+				margin: auto;
+				display: block;
+				position: relative;
+				margin-top: 50px;
+				max-height: 250px;
+				filter: grayscale(1) sepia(100%) hue-rotate(55deg) saturate(7) brightness(1) contrast(2);
+				margin-top: 50px;
+				margin-left: -10px;
+				transition: all 0.3s ease;
+			}
+
+			.center-image img:hover {
+				transform: scale(1.05) rotate(2deg);
+				filter: grayscale(1) sepia(100%) hue-rotate(55deg) saturate(10) brightness(1.1) contrast(2);
+			}
+
+			.pip-footer {
+				position: fixed;
+				bottom: 0;
+				width: calc(100% - 20px);
+				margin: 10px;
+				border: none;
+				font-size: 22px;
+			}
+
+			.navbar.navbar-light .navbar-nav {
+				margin: 0px 100px;
+			}
+
+			.navbar.navbar-light .navbar-nav>li {
+				padding: 0px 20px;
+			}
+
+			.nav.nav-tabs {
+				margin: 20px;
+				border-bottom: none;
+			}
+
+			.nav.nav-tabs>li:nth-child(2)>a {
+				opacity: 0.6;
+			}
+
+			.nav.nav-tabs>li:nth-child(3)>a {
+				opacity: 0.3;
+			}
+
+			.nav.nav-tabs>.nav-item>.nav-link:hover {
+				border: 1px solid transparent;
+			}
+
+			.nav.nav-tabs>li>a {
+				font-size: 26px !important;
+				background: transparent !important;
+				border: 1px solid transparent !important;
+				padding: 5px 10px;
+				transition: all 0.2s ease;
+			}
+
+			.nav.nav-tabs>li>a:hover {
+				opacity: 1 !important;
+				text-shadow: 0 0 8px #14fe17;
+			}
+
+			.level-progress {
+				width: 100%;
+				height: 10px;
+				border: 2px solid #14fe17;
+				display: inline-block;
+				position: relative;
+				background-color: #272b23;
+				cursor: pointer;
+				overflow: hidden;
+				border-radius: 5px;
+			}
+
+			.level-progress-indicator {
+				height: 100%;
+				background: #14fe17;
+				width: 0%;
+				transition: width 0.5s ease, background-color 0.3s ease;
+			}
+
+			.level-progress:hover .level-progress-indicator {
+				background: #0ed811;
+			}
+
+			.stat-bar {
+				width: 80px;
+				margin: auto;
+				transition: all 0.3s ease;
+				position: relative;
+			}
+
+			.stat-bar:hover {
+				width: 150px;
+			}
+
+			.stat-bar.critical .level-progress-indicator {
+				animation: pulse 0.5s infinite alternate;
+			}
+
+			@keyframes pulse {
+				0% { background-color: #14fe17; }
+				100% { background-color: #ff3333; }
+			}
+
+			#status {
+				max-width: 400px;
+				margin: auto;
+			}
+
+			.stat-bars>.row {
+				margin-bottom: 75px;
+			}
+
+			.w10 { width: 10%; }
+			.w20 { width: 20%; }
+			.w30 { width: 30%; }
+			.w40 { width: 40%; }
+			.w50 { width: 50%; }
+			.w60 { width: 60%; }
+			.w70 { width: 70%; }
+			.w80 { width: 80%; }
+			.w90 { width: 90%; }
+			.w100 { width: 100%; }
+
+			.stat-numbers .col-1,
+			.stat-numbers .col-2 {
+				background: rgba(16, 255, 0, 0.15);
+				margin-right: 4px;
+			}
+
+			.stat-numbers .col-1.transparent,
+			.stat-numbers .col-2.transparent {
+				background: transparent;
+			}
+
+			.stat-numbers img {
+				width: 100%;
+				filter: grayscale(1) brightness(200) contrast(0) sepia(100%) hue-rotate(55deg) saturate(20);
+			}
+
+			.stat-numbers img.sm-image {
+				width: 15px;
+				margin-left: -5px;
+			}
+
+			.tab-pane {
+				display: none;
+			}
+
+			.tab-pane.active {
+				display: block;
+			}
+
+			.helmet {
+				padding-top: 5px;
+			}
+
+			#weapons.tab-pane.full {
+				width: 100%;
+				max-width: 100%;
+			}
+
+			.item-list {
+				float: left;
+				padding: 0px;
+				list-style: none;
+				margin: 0px;
+			}
+
+			.item-list li a {
+				display: block;
+				width: 300px;
+				padding: 5px 10px;
+				border-radius: 2px;
+				color: #14fe17;
+				padding-left: 25px;
+				text-decoration: none !important;
+				transition: background 0.3s ease, color 0.3s ease;
+				position: relative;
+			}
+
+			.item-list li a:hover {
+				text-decoration: none;
+				background: #14fe17;
+				color: #272b23;
+			}
+
+			.item-list a.active::before {
+				content: "";
+				display: block;
+				position: absolute;
+				height: 10px;
+				width: 10px;
+				background: #14fe17;
+				left: 10px;
+				margin-top: 7px;
+			}
+
+			.item-list a.active:hover {
+				color: #272b23;
+				background: #14fe17;
+			}
+
+			.item-list a.active:hover::before {
+				background: #272b23;
+			}
+
+			.item-stats {
+				position: absolute;
+				right: 10px;
+				bottom: 50px;
+				width: 200px;
+			}
+
+			.pull-right {
+				float: right !important;
+			}
+
+			.pull-left {
+				float: left !important;
+			}
+
+			.item-stats .row .col-12 {
+				background: rgba(16, 255, 0, 0.15);
+				margin-bottom: 2px;
+				padding: 5px;
+			}
+
+			/* Quests tab styles */
+			.quest-list {
+				list-style: none;
+				padding: 0;
+				margin: 20px;
+			}
+
+			.quest-list li {
+				padding: 8px 15px;
+				margin-bottom: 5px;
+				position: relative;
+				padding-left: 30px;
+			}
+
+			.quest-list li:before {
+				content: "◻";
+				position: absolute;
+				left: 10px;
+			}
+
+			.quest-list li[data-completed="true"]:before {
+				content: "✓";
+				color: #14fe17;
+			}
+
+			.quest-list li[data-completed="true"] {
+				opacity: 0.7;
+				text-decoration: line-through;
+			}
+
+			/* Radio tab styles */
+			.radio-station {
+				padding: 10px;
+				margin: 10px;
+				border: 1px solid #14fe17;
+				cursor: pointer;
+				transition: all 0.3s ease;
+			}
+
+			.radio-station:hover {
+				background: rgba(20, 254, 23, 0.2);
+			}
+
+			.radio-station.playing {
+				background: rgba(20, 254, 23, 0.3);
+				border-width: 2px;
+			}
+
+			/* Map tab styles */
+.map-container {
+    overflow: hidden;
+    position: relative;
+    border: 2px solid #14fe17;
+    user-select: none; /* Prevent text selection while dragging */
+}
+
+#panorama-view {
+        transition: background-size 0.2s ease, background-position 0.2s ease;
+
+    touch-action: none; /* Essential for touch devices */
+}
+			.map-marker {
+				position: absolute;
+				width: 10px;
+				height: 10px;
+				background: #ff3333;
+				border-radius: 50%;
+				transform: translate(-50%, -50%);
+				cursor: pointer; /* Make the markers interactive */
+			}
+
+			.map-marker:hover {
+				transform: translate(-50%, -50%) scale(1.5); /* Enlarge on hover */
+				z-index: 10; /* Bring to front on hover */
+			}
+
+			/* Tooltip styles */
+			.tooltip-inner {
+				background-color: #14fe17;
+				color: #272b23;
+				font-family: Pipboy, monospace;
+			}
+
+			.bs-tooltip-auto[x-placement^=top] .arrow::before, 
+			.bs-tooltip-top .arrow::before {
+				border-top-color: #14fe17;
+			}
+
+			/* Theme selector */
+			.theme-selector {
+				position: fixed;
+				top: 10px;
+				right: 10px;
+				z-index: 10000;
+			}
+
+			.theme-btn {
+				background: transparent;
+				border: 1px solid #14fe17;
+				color: #14fe17;
+				padding: 2px 5px;
+				margin: 0 2px;
+				cursor: pointer;
+			}
+
+			.theme-btn.active {
+				background: #14fe17;
+				color: #272b23;
+			}
+
+			/* CRT effect */
+			.crt-effect {
+				position: fixed;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				background: linear-gradient(rgba(18, 16, 16, 0) 50%, 
+							rgba(0, 0, 0, 0.25) 50%), 
+							linear-gradient(90deg, rgba(255, 0, 0, 0.06), 
+							rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+				z-index: 10000;
+				pointer-events: none;
+				background-size: 100% 2px, 3px 100%;
+			}
+			
+			/* Damage effect */
+			.screen-damage {
+				position: fixed;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%"><path d="M0,0 L100,100 M100,0 L0,100" stroke="rgba(255,0,0,0.1)" stroke-width="1"/></svg>');
+				opacity: 0.3;
+				pointer-events: none;
+				z-index: 10001;
+				display: none;
+			}
+
+			/* Loading message */
+			.loading-message {
+				position: fixed;
+				bottom: 60px;
+				left: 50%;
+				transform: translateX(-50%);
+				background: rgba(0,0,0,0.7);
+				padding: 5px 10px;
+				border: 1px solid #14fe17;
+				z-index: 1000;
+				font-size: 14px;
+				color: #14fe17;
+			}
+
+			/* Responsive styles */
+			@media (max-width: 768px) {
+				.navbar-nav {
+					flex-direction: column;
+				}
+				
+				.center-image {
+					margin-left: 50px;
+				}
+				
+				.center-image img {
+					max-height: 150px;
+				}
+				
+				.nav.nav-tabs li {
+					display: inline-block;
+				}
+				
+				.item-list li a {
+					width: 200px;
+				}
+				 .navbar.navbar-light .navbar-nav {
+					margin: 0px;
+				}
+			}
+
+			/* Amber theme */
+			body.amber-theme {
+				color: #ff9e00;
+			}
+			
+			body.amber-theme .navbar {
+				border-bottom-color: #ff9e00;
+			}
+			
+			body.amber-theme .navbar.navbar-light:before,
+			body.amber-theme .navbar.navbar-light:after {
+				background: #ff9e00;
+			}
+			
+			body.amber-theme ul>li.nav-item>a.nav-link,
+			body.amber-theme ul>li.nav-item.active>a.nav-link {
+				color: #ff9e00 !important;
+			}
+			
+			body.amber-theme .level-progress {
+				border-color: #ff9e00;
+			}
+			
+			body.amber-theme .level-progress-indicator {
+				background: #ff9e00;
+			}
+			
+			body.amber-theme .item-list li a {
+				color: #ff9e00;
+			}
+			
+			body.amber-theme .item-list li a:hover {
+				background: #ff9e00;
+				color: #272b23;
+			}
+
+			/* Blue theme */
+			body.blue-theme {
+				color: #00a8ff;
+			}
+			
+			body.blue-theme .navbar {
+				border-bottom-color: #00a8ff;
+			}
+			
+			body.blue-theme .navbar.navbar-light:before,
+			body.blue-theme .navbar.navbar-light:after {
+				background: #00a8ff;
+			}
+			
+			body.blue-theme ul>li.nav-item>a.nav-link,
+			body.blue-theme ul>li.nav-item.active>a.nav-link {
+				color: #00a8ff !important;
+			}
+			
+			body.blue-theme .level-progress {
+				border-color: #00a8ff;
+			}
+			
+			body.blue-theme .level-progress-indicator {
+				background: #00a8ff;
+			}
+			
+			body.blue-theme .item-list li a {
+				color: #00a8ff;
+			}
+			
+			body.blue-theme .item-list li a:hover {
+				background: #00a8ff;
+				color: #272b23;
+			}
+
+		</style>
+	</head>
+	<body class="green-theme">
+		<div class="theme-selector">
+			<button class="theme-btn active" data-theme="green">GREEN</button>
+			<button class="theme-btn" data-theme="amber">AMBER</button>
+			<button class="theme-btn" data-theme="blue">BLUE</button>
+		</div>
+		<div class="crt-effect"></div>
+		<div class="screen-damage"></div>
+		<nav class="navbar navbar-expand navbar-light">
+			<div class="collapse navbar-collapse" id="main">
+				<ul class="navbar-nav nav-fill">
+					<li class="nav-item">
+						<a href="#status" class="nav-link active" data-toggle="tab">STATUS</a>
+					</li>
+					<li class="nav-item">
+						<a href="#inventory" class="nav-link" data-toggle="tab">INV</a>
+					</li>
+					<li class="nav-item">
+						<a href="#data" class="nav-link" data-toggle="tab">DATA</a>
+					</li>
+					 <li class="nav-item">
+						<a href="#map" class="nav-link" data-toggle="tab">MAP</a>
+					</li>
+					<li class="nav-item">
+						<a href="#radio" class="nav-link" data-toggle="tab">RADIO</a>
+					</li>
+				</ul>
+			</div>
+		</nav>
+
+		<div class="container">
+			<div class="row">
+				<div class="col-12">
+					<ul class="nav nav-tabs" id="mainTabs">
+						<li class="nav-item">
+							<a href="#status" class="nav-link active" data-toggle="tab">STATUS</a>
+						</li>
+						<li class="nav-item">
+							<a href="#special" class="nav-link" data-toggle="tab">SPECIAL</a>
+						</li>
+						<li class="nav-item">
+							<a href="#perks" class="nav-link" data-toggle="tab">PERKS</a>
+						</li>
+						 <li class="nav-item">
+							<a href="#quests" class="nav-link" data-toggle="tab">QUESTS</a>
+						</li>
+					</ul>
+					<div class="tab-content">
+						<div class="tab-pane active" id="status" role="tabpanel">
+							<div class="center-image">
+								<img class="center-image vault-boy" src="2345.png" alt="Vault Boy">
+							</div>
+							<div class="stat-bars">
+								<div class="row">
+									<div class="col-12">
+										<div class="stat-bar" data-toggle="tooltip" title="HP: 90/100">
+											<div class="level-progress">
+												<div class="level-progress-indicator w90" data-value="90"></div>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="row">
+									 <div class="col-3">
+										<div class="stat-bar" data-toggle="tooltip" title="AP: 70/100">
+											<div class="level-progress">
+												<div class="level-progress-indicator w70" data-value="70"></div>
+											</div>
+										</div>
+									</div>
+									<div class="col-6"></div>
+									<div class="col-3">
+										<div class="stat-bar" data-toggle="tooltip" title="RADs: 60/100">
+											<div class="level-progress">
+												<div class="level-progress-indicator w60" data-value="60"></div>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="row">
+									<div class="col-3">
+										<div class="stat-bar critical" data-toggle="tooltip" title="H20: 20/100 - Critical!">
+											<div class="level-progress">
+												<div class="level-progress-indicator w20" data-value="20"></div>
+											</div>
+										</div>
+									</div>
+									<div class="col-6"></div>
+									 <div class="col-3">
+										<div class="stat-bar" data-toggle="tooltip" title="FOOD: 80/100">
+											<div class="level-progress">
+												<div class="level-progress-indicator w80" data-value="80"></div>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="row">
+									<div class="col-12">
+										<div class="stat-bar" data-toggle="tooltip" title="XP: 50/100">
+											<div class="level-progress">
+												<div class="level-progress-indicator w50" data-value="50"></div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+							<div class="row stat-numbers">
+								<div class="col-2 transparent"></div>
+								<div class="col-2"><img class="img-responsive" src="img/pistol.png" alt="Gun"></div>
+								<div class="col-1">
+									<div class="icon"><img class="sm-image img-responsive" src="img/crosshair.png" alt="Crosshair"></div>
+									<div class="points">18</div>
+								</div>
+								<div class="col-1"></div>
+								<div class="col-2"><img class="img-responsive helmet" src="img/helmet.png" alt="Helmet"></div>
+								<div class="col-1">
+									<div class="icon"><img class="sm-image img-responsive" src="img/power.png" alt="Bolt"></div>
+									<div class="points">5</div>
+								</div>
+								<div class="col-1">
+									<div class="icon"><img class="sm-image img-responsive" src="img/radiation.png" alt="Radioactive"></div>
+									<div class="points">12</div>
+								</div>
+							</div>
+						</div>
+						<div class="tab-pane" id="special" role="tabpanel">
+							<div class="row">
+								<div class="col-md-6">
+									<h3 class="text-center">SPECIAL</h3>
+									<div class="special-stats">
+										<div class="row mb-3">
+											<div class="col-5">Strength:</div>
+											<div class="col-7">
+												<div class="input-group">
+													<div class="input-group-prepend">
+														<button class="btn btn-sm btn-outline-secondary special-adjust" data-stat="strength" data-action="decrease">-</button>
+													</div>
+													<input type="text" class="form-control form-control-sm special-value" value="5" data-stat="strength" readonly>
+													<div class="input-group-append">
+														<button class="btn btn-sm btn-outline-secondary special-adjust" data-stat="strength" data-action="increase">+</button>
+													</div>
+												</div>
+											</div>
+										</div>
+										<div class="row mb-3">
+											<div class="col-5">Perception:</div>
+											<div class="col-7">
+												<div class="input-group">
+													<div class="input-group-prepend">
+														<button class="btn btn-sm btn-outline-secondary special-adjust" data-stat="perception" data-action="decrease">-</button>
+													</div>
+													<input type="text" class="form-control form-control-sm special-value" value="5" data-stat="perception" readonly>
+													<div class="input-group-append">
+														<button class="btn btn-sm btn-outline-secondary special-adjust" data-stat="perception" data-action="increase">+</button>
+													</div>
+												</div>
+											</div>
+										</div>
+										<div class="row mb-3">
+											<div class="col-5">Endurance:</div>
+											<div class="col-7">
+												<div class="input-group">
+													<div class="input-group-prepend">
+														<button class="btn btn-sm btn-outline-secondary special-adjust" data-stat="endurance" data-action="decrease">-</button>
+													</div>
+													<input type="text" class="form-control form-control-sm special-value" value="5" data-stat="endurance" readonly>
+													<div class="input-group-append">
+														<button class="btn btn-sm btn-outline-secondary special-adjust" data-stat="endurance" data-action="increase">+</button>
+													</div>
+												</div>
+											</div>
+										</div>
+										<div class="row mb-3">
+											<div class="col-5">Charisma:</div>
+											<div class="col-7">
+												<div class="input-group">
+													<div class="input-group-prepend">
+														<button class="btn btn-sm btn-outline-secondary special-adjust" data-stat="charisma" data-action="decrease">-</button>
+													</div>
+													<input type="text" class="form-control form-control-sm special-value" value="5" data-stat="charisma" readonly>
+													<div class="input-group-append">
+														<button class="btn btn-sm btn-outline-secondary special-adjust" data-stat="charisma" data-action="increase">+</button>
+													</div>
+												</div>
+											</div>
+										</div>
+										<div class="row mb-3">
+											<div class="col-5">Intelligence:</div>
+											<div class="col-7">
+												<div class="input-group">
+													<div class="input-group-prepend">
+														<button class="btn btn-sm btn-outline-secondary special-adjust" data-stat="intelligence" data-action="decrease">-</button>
+													</div>
+													<input type="text" class="form-control form-control-sm special-value" value="5" data-stat="intelligence" readonly>
+													<div class="input-group-append">
+														<button class="btn btn-sm btn-outline-secondary special-adjust" data-stat="intelligence" data-action="increase">+</button>
+													</div>
+												</div>
+											</div>
+										</div>
+										<div class="row mb-3">
+											<div class="col-5">Agility:</div>
+											<div class="col-7">
+												<div class="input-group">
+													<div class="input-group-prepend">
+														<button class="btn btn-sm btn-outline-secondary special-adjust" data-stat="agility" data-action="decrease">-</button>
+													</div>
+													<input type="text" class="form-control form-control-sm special-value" value="5" data-stat="agility" readonly>
+													<div class="input-group-append">
+														<button class="btn btn-sm btn-outline-secondary special-adjust" data-stat="agility" data-action="increase">+</button>
+													</div>
+												</div>
+											</div>
+										</div>
+										<div class="row mb-3">
+											<div class="col-5">Luck:</div>
+											<div class="col-7">
+												<div class="input-group">
+													<div class="input-group-prepend">
+														<button class="btn btn-sm btn-outline-secondary special-adjust" data-stat="luck" data-action="decrease">-</button>
+													</div>
+													<input type="text" class="form-control form-control-sm special-value" value="5" data-stat="luck" readonly>
+													<div class="input-group-append">
+														<button class="btn btn-sm btn-outline-secondary special-adjust" data-stat="luck" data-action="increase">+</button>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="col-md-6">
+									<div class="text-center">
+										<img id="special-image" src="img/strengh.webp" alt="SPECIAL Stats" class="img-fluid">
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="tab-pane" id="perks" role="tabpanel">
+							<div class="row">
+								<div class="col-md-6">
+									<h3>Perks</h3>
+									<ul class="perk-list">
+										<li data-perk="strong-back">Strong Back (+50 Carry Weight)</li>
+										<li data-perk="lead-belly">Lead Belly (Less radiation from food/drink)</li>
+										<li data-perk="scrounger">Scrounger (More ammo in containers)</li>
+										<li data-perk="hacker">Hacker (Increased hacking skill)</li>
+										<li data-perk="gun-nut">Gun Nut (Gun mods)</li>
+									</ul>
+								</div>
+								<div class="col-md-6">
+									<h4>Perk Details</h4>
+									<div id="perk-details">
+										<p>Select a perk to see its details.</p>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="tab-pane" id="inventory" role="tabpanel">
+							<div class="row">
+								<div class="col-md-4">
+									<h3>Weapons</h3>
+									<ul class="item-list" id="weapons">
+										<li data-item="44-pistol"><a href="#">.44 Pistol</a></li>
+										<li data-item="combat-shotgun"><a href="#">Combat Shotgun</a></li>
+										<li data-item="hunting-rifle"><a href="#">Hunting Rifle</a></li>
+										<li data-item="laser-rifle"><a href="#">Laser Rifle</a></li>
+										<li data-item="rocket-launcher"><a href="#">Rocket Launcher</a></li>
+									</ul>
+								</div>
+								<div class="col-md-4">
+									<h3>Apparel</h3>
+									<ul class="item-list" id="apparel">
+										<li data-item="vault-suit"><a href="#">Vault Suit</a></li>
+										<li data-item="leather-armor"><a href="#">Leather Armor Set</a></li>
+										<li data-item="metal-armor"><a href="#">Metal Armor Set</a></li>
+										<li data-item="power-armor"><a href="#">Power Armor</a></li>
+									</ul>
+								</div>
+								<div class="col-md-4">
+									<div class="item-stats" id="item-stats">
+										 <div class="row">
+											<div class="col-12">
+												<p>Item Name: </p>
+											</div>
+										</div>
+										<div class="row">
+											<div class="col-12">
+												<p>Damage: </p>
+											</div>
+										</div>
+										<div class="row">
+											<div class="col-12">
+												<p>Weight: </p>
+											</div>
+										</div>
+										 <div class="row">
+											<div class="col-12">
+												<p>Value: </p>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="tab-pane" id="data" role="tabpanel">
+							<ul class="nav nav-tabs" id="dataTabs">
+								<li class="nav-item">
+									<a href="#holotapes" class="nav-link active" data-toggle="tab">Holotapes</a>
+								</li>
+								<li class="nav-item">
+									<a href="#notes" class="nav-link" data-toggle="tab">Notes</a>
+								</li>
+								<li class="nav-item">
+									 <a href="#codex" class="nav-link" data-toggle="tab">Codex</a>
+								</li>
+							</ul>
+							<div class="tab-content">
+								<div class="tab-pane active" id="holotapes" role="tabpanel">
+									<ul class="item-list">
+										<li data-holotape="entry1"><a href="#">Entry 1: Vault 111</a></li>
+										<li data-holotape="entry2"><a href="#">Entry 2: Sanctuary Hills</a></li>
+										<li data-holotape="entry3"><a href="#">Entry 3: Concord</a></li>
+									</ul>
+									 <div id="holotape-details">
+										<p>Select a holotape to play its entry.</p>
+									</div>
+								</div>
+								<div class="tab-pane" id="notes" role="tabpanel">
+									 <ul class="item-list">
+											<li data-note="note1"><a href="#">Note 1: Mysterious Note</a></li>
+											<li data-note="note2"><a href="#">Note 2:  Journal Entry</a></li>
+									</ul>
+									<div id="note-details">
+										<p>Select a note to read its content.</p>
+									</div>
+								</div>
+								<div class="tab-pane" id="codex" role="tabpanel">
+									<ul class="item-list">
+											<li data-codex="codex1"><a href="#">Codex Entry 1: The Great War</a></li>
+											<li data-codex="codex2"><a href="#">Codex Entry 2:  Factions of the Commonwealth</a></li>
+									</ul>
+									 <div id="codex-details">
+										<p>Select a codex entry to read more.</p>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="tab-pane" id="map" role="tabpanel">
+    <div class="map-container">
+        <div id="panorama-view" style="background-image: url('img/map.webp'); 
+                      background-size: 1000px; /* Larger than container */
+                      background-position: 0 0;
+                      width: 100%; 
+                      height: 400px;
+                      cursor: grab;"></div>
+    </div>
+    <div class="text-center mt-3">
+        <button class="btn btn-pipboy" id="zoomIn">Zoom In</button>
+        <button class="btn btn-pipboy" id="zoomOut">Zoom Out</button>
+        <button class="btn btn-pipboy" id="resetMap">Reset</button>
+    </div>
+</div>
+						<div class="tab-pane" id="quests" role="tabpanel">
+							<ul class="quest-list">
+								<li data-quest="quest1">Main Quest: Out of Time</li>
+								<li data-quest="quest2" data-completed="true">Side Quest: Sanctuary</li>
+								<li data-quest="quest3">Side Quest: Jewel of the Commonwealth</li>
+							</ul>
+							 <div id="quest-details">
+								<p>Select a quest to see its details.</p>
+							</div>
+						</div>
+					<div class="tab-pane" id="radio" role="tabpanel">
+    <div class="radio-station active" data-station="diamond-city-radio" 
+         data-soundcloud="https://api.soundcloud.com/tracks/233955191">
+        Diamond City Radio
+    </div>
+    <div class="radio-station" data-station="freedom-radio" 
+         data-soundcloud="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/123456789&color=%23ff5500&auto_play=true">
+        Radio Freedom
+    </div>
+    <div class="radio-station" data-station="classical-radio" 
+         data-soundcloud="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/987654321&color=%23ff5500&auto_play=true">
+        Classical Radio
+    </div>
+    
+    <div id="radio-message">
+        <p>Now Playing: <span id="now-playing">Diamond City Radio</span></p>
+    </div>
+    
+    <!-- Hidden player container -->
+    <div id="soundcloud-player" style="display:none;"></div>
+</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<footer class="pip-footer">
+			<div class="text-center">
+				<span id="current-time">00:00 AM</span> | <span id="current-date">MM/DD/YYYY</span>
+			</div>
+		</footer>
+		<div class="loading-message" id="loadingMessage">
+			Loading...
+		</div>
+
+		<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+		<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+		<script>
+		document.addEventListener('DOMContentLoaded', function() {
+    const panorama = document.getElementById('panorama-view');
+    let isDragging = false;
+    let startPos = { x: 0, y: 0 };
+    let translate = { x: 0, y: 0 };
+    let scale = 1;
+
+    // Dragging functionality
+    panorama.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        startPos = {
+            x: e.clientX - translate.x,
+            y: e.clientY - translate.y
+        };
+        panorama.style.cursor = 'grabbing';
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        
+        translate.x = e.clientX - startPos.x;
+        translate.y = e.clientY - startPos.y;
+        
+        panorama.style.backgroundPosition = `${translate.x}px ${translate.y}px`;
+    });
+
+    document.addEventListener('mouseup', () => {
+        isDragging = false;
+        panorama.style.cursor = 'grab';
+    });
+
+    // Touch support for mobile devices
+    panorama.addEventListener('touchstart', (e) => {
+        isDragging = true;
+        startPos = {
+            x: e.touches[0].clientX - translate.x,
+            y: e.touches[0].clientY - translate.y
+        };
+        panorama.style.cursor = 'grabbing';
+    });
+
+    document.addEventListener('touchmove', (e) => {
+        if (!isDragging) return;
+        
+        translate.x = e.touches[0].clientX - startPos.x;
+        translate.y = e.touches[0].clientY - startPos.y;
+        
+        panorama.style.backgroundPosition = `${translate.x}px ${translate.y}px`;
+    });
+
+    document.addEventListener('touchend', () => {
+        isDragging = false;
+        panorama.style.cursor = 'grab';
+    });
+
+    // Zoom functionality
+    document.getElementById('zoomIn').addEventListener('click', () => {
+        scale *= 1.2;
+        panorama.style.backgroundSize = `${1000 * scale}px`;
+    });
+
+    document.getElementById('zoomOut').addEventListener('click', () => {
+        scale /= 1.2;
+        panorama.style.backgroundSize = `${1000 * scale}px`;
+    });
+
+    // Reset functionality
+    document.getElementById('resetMap').addEventListener('click', () => {
+        translate = { x: 0, y: 0 };
+        scale = 1;
+        panorama.style.backgroundPosition = '0 0';
+        panorama.style.backgroundSize = '1000px';
+    });
+});
+			$(document).ready(function() {
+				// Tooltip initialization
+				$('[data-toggle="tooltip"]').tooltip();
+
+				// Tabs switching logic
+				$('.nav-tabs a').on('click', function (e) {
+					e.preventDefault();
+					$(this).tab('show');
+				});
+
+				// Theme switching
+				$('.theme-btn').on('click', function() {
+					const theme = $(this).data('theme');
+					$('body').removeClass('green-theme amber-theme blue-theme').addClass(theme + '-theme');
+					$('.theme-btn').removeClass('active');
+					$(this).addClass('active');
+				});
+
+				// SPECIAL stats adjustment
+				$('.special-adjust').on('click', function() {
+					const stat = $(this).data('stat');
+					const action = $(this).data('action');
+					const inputField = $(`.special-value[data-stat="${stat}"]`);
+					let value = parseInt(inputField.val());
+
+					if (action === 'increase' && value < 10) {
+						value++;
+					} else if (action === 'decrease' && value > 1) {
+						value--;
+					}
+					inputField.val(value);
+
+					// Update image based on selected stat
+					const specialImages = {
+						"strength": "img/strengh.webp",
+						"perception": "img/perception.webp",
+						"endurance": "img/intelligence.webp",
+						"charisma": "img/charisma.webp",
+						"intelligence": "img/intelligence.webp",
+						"agility": "img/agility.webp",
+						"luck": "img/luck.webp"
+					};
+					$('#special-image').attr('src', specialImages[stat] || "https://via.placeholder.com/200x200?text=SPECIAL");
+				});
+
+				// Perk details
+				$('.perk-list li').on('click', function() {
+					const perk = $(this).data('perk');
+					let details = '';
+					switch (perk) {
+						case 'strong-back':
+							details = "Increases your carrying capacity by 50.";
+							break;
+						case 'lead-belly':
+							details = "You take less radiation damage from eating and drinking.";
+							break;
+						case 'scrounger':
+							details = "Increases your chance of finding more ammunition in containers.";
+							break;
+						case 'hacker':
+							details = "Increases your ability to hack into computer terminals.";
+							break;
+						case 'gun-nut':
+							details = "Allows you to craft better gun modifications.";
+							break;
+						default:
+							details = "Select a perk to see its details.";
+					}
+					$('#perk-details').text(details);
+				});
+
+				 // Inventory item details
+				$('#weapons li, #apparel li').on('click', function() {
+					const item = $(this).data('item');
+					let details = { name: item, damage: '-', weight: '-', value: '-' };
+
+					switch (item) {
+						case '44-pistol':
+							details = { name: '.44 Pistol', damage: '48', weight: '2.9', value: '105' };
+							break;
+						case 'combat-shotgun':
+							details = { name: 'Combat Shotgun', damage: '50', weight: '10.0', value: '230' };
+							break;
+						case 'hunting-rifle':
+							details = { name: 'Hunting Rifle', damage: '70', weight: '7.0', value: '150' };
+							break;
+						case 'laser-rifle':
+							details = { name: 'Laser Rifle', damage: '30', weight: '6.5', value: '320' };
+							break;
+						 case 'rocket-launcher':
+							details = { name: 'Rocket Launcher', damage: '150', weight: '18.5', value: '450' };
+							break;
+						case 'vault-suit':
+							details = { name: 'Vault Suit', damage: '0', weight: '2.0', value: '25' };
+							break;
+						case 'leather-armor':
+							 details = { name: 'Leather Armor Set', damage: '15', weight: '12', value: '80' };
+							break;
+						case 'metal-armor':
+							details = { name: 'Metal Armor Set', damage: '20', weight: '20', value: '120' };
+							break;
+						case 'power-armor':
+							details = { name: 'Power Armor', damage: '50', weight: '50', value: '500' };
+							break;
+						default:
+							details = { name: 'Item Name', damage: '-', weight: '-', value: '-' };
+					}
+
+					const itemStatsDiv = $('#item-stats');
+					itemStatsDiv.html(`
+						<div class="row">
+							<div class="col-12"><p>Name: ${details.name}</p></div>
+						</div>
+						<div class="row">
+							<div class="col-12"><p>Damage: ${details.damage}</p></div>
+						</div>
+						<div class="row">
+							<div class="col-12"><p>Weight: ${details.weight}</p></div>
+						</div>
+						 <div class="row">
+							<div class="col-12"><p>Value: ${details.value}</p></div>
+						</div>
+					`);
+				});
+
+				// Holotape details
+				$('#holotapes li').on('click', function() {
+					const holotape = $(this).data('holotape');
+					let details = '';
+					switch (holotape) {
+						case 'entry1':
+							details = "Entry 1: Audio log from Vault 111, discussing cryo-sleep experiments.";
+							break;
+						case 'entry2':
+							details = "Entry 2: A recording from Sanctuary Hills before the war.";
+							break;
+						case 'entry3':
+							details = "Entry 3: Notes from a survivor in Concord.";
+							break;
+						default:
+							details = "Select a holotape to play its entry.";
+					}
+					$('#holotape-details').text(details);
+				});
+
+				// Note details
+				$('#notes li').on('click', function() {
+					const note = $(this).data('note');
+					let details = '';
+					switch (note) {
+						case 'note1':
+							details = "A mysterious note with cryptic symbols and a warning.";
+							break;
+						case 'note2':
+							details = "Journal entry of a survivor detailing their struggles.";
+							break;
+						default:
+							details = "Select a note to read its content.";
+					}
+					$('#note-details').text(details);
+				});
+
+				// Codex details
+				$('#codex li').on('click', function() {
+					const codex = $(this).data('codex');
+					let details = '';
+					switch (codex) {
+						case 'codex1':
+							details = "Codex Entry 1: Details the events of the Great War and its aftermath.";
+							break;
+						case 'codex2':
+							details = "Codex Entry 2: Describes the major factions in the Commonwealth.";
+							break;
+						default:
+							details = "Select a codex entry to read more.";
+					}
+					$('#codex-details').text(details);
+				});
+
+				// Map location details
+				$('.map-marker').on('click', function() {
+					const location = $(this).data('location');
+					$('#map-location-details').text(`Location: ${location}`);
+				});
+
+				// Map zoom functionality
+				$('#zoomIn').on('click', function() {
+					// In a real app, this would zoom the map
+					alert("Map zoom in");
+				});
+
+				$('#zoomOut').on('click', function() {
+					// In a real app, this would zoom the map
+					alert("Map zoom out");
+				});
+
+				// Quest details
+				$('.quest-list li').on('click', function() {
+					const quest = $(this).data('quest');
+					let details = '';
+					switch (quest) {
+						case 'quest1':
+							details = "Main Quest: Follow the trail of your son.";
+							break;
+						case 'quest2':
+							details = "Side Quest: Help rebuild Sanctuary.";
+							break;
+						case 'quest3':
+							details = "Side Quest: Find the missing jewel.";
+							break;
+						default:
+							details = "Select a quest to see its details.";
+					}
+					$('#quest-details').text(details);
+				});
+
+				// Radio station selection
+				$('.radio-station').on('click', function() {
+					const station = $(this).data('station');
+					$('.radio-station').removeClass('playing');
+					$(this).addClass('playing');
+					let message = `Now playing: ${station}`;
+					 switch (station) {
+						case 'diamond-city-radio':
+							message = "Now playing: Diamond City Radio.  Enjoy the tunes of the Commonwealth!";
+							break;
+						case 'freedom-radio':
+							 message = "Now playing: Radio Freedom.  For the Minutemen!";
+							break;
+						case 'classical-radio':
+							message = "Now playing: Classical Radio.  Enjoy the finer things in the wasteland.";
+							break;
+						default:
+							message = `Now playing: ${station}`;
+					}
+					$('#radio-message').text(message);
+				});
+
+				// Update clock
+				function updateClock() {
+					const now = new Date();
+					const timeStr = now.toLocaleTimeString();
+					const dateStr = now.toLocaleDateString();
+					
+					$('#current-time').text(timeStr);
+					$('#current-date').text(dateStr);
+					
+					// Simulate loading message
+					if ($('#loadingMessage').is(':visible')) {
+						setTimeout(function() {
+							$('#loadingMessage').fadeOut();
+						}, 2000);
+					}
+				}
+				
+				// Initialize clock and update every second
+				updateClock();
+				setInterval(updateClock, 1000);
+
+				// Simulate screen damage effect randomly
+				setInterval(function() {
+					if (Math.random() > 0.95) {
+						$('.screen-damage').fadeIn(100).delay(300).fadeOut(500);
+					}
+				}, 5000);
+
+				 // Progress bar animation
+				function animateProgressBar() {
+					$('.level-progress-indicator').each(function() {
+						const value = $(this).data('value');
+						$(this).css('width', value + '%');
+					});
+				}
+
+				animateProgressBar();
+			   
+			});
+			document.addEventListener('DOMContentLoaded', function() {
+    const panorama = document.getElementById('panorama-view');
+    let isDragging = false;
+    let startPos = { x: 0, y: 0 };
+    let translate = { x: 0, y: 0 };
+    let scale = 1;
+    const minScale = 0.5;  // Minimum zoom level
+    const maxScale = 3;    // Maximum zoom level
+
+    // Dragging functionality
+    panorama.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        startPos = {
+            x: e.clientX - translate.x,
+            y: e.clientY - translate.y
+        };
+        panorama.style.cursor = 'grabbing';
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        
+        translate.x = e.clientX - startPos.x;
+        translate.y = e.clientY - startPos.y;
+        
+        updateMapPosition();
+    });
+
+    document.addEventListener('mouseup', () => {
+        isDragging = false;
+        panorama.style.cursor = 'grab';
+    });
+
+    // Touch support for mobile devices
+    panorama.addEventListener('touchstart', (e) => {
+        isDragging = true;
+        startPos = {
+            x: e.touches[0].clientX - translate.x,
+            y: e.touches[0].clientY - translate.y
+        };
+        panorama.style.cursor = 'grabbing';
+    });
+
+    document.addEventListener('touchmove', (e) => {
+        if (!isDragging) return;
+        
+        translate.x = e.touches[0].clientX - startPos.x;
+        translate.y = e.touches[0].clientY - startPos.y;
+        
+        updateMapPosition();
+    });
+
+    document.addEventListener('touchend', () => {
+        isDragging = false;
+        panorama.style.cursor = 'grab';
+    });
+
+    // Mouse wheel zoom
+    panorama.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        
+        // Get mouse position relative to the panorama
+        const rect = panorama.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+        
+        // Calculate position before zoom
+        const xPercent = (mouseX - translate.x) / (1000 * scale);
+        const yPercent = (mouseY - translate.y) / (1000 * scale * (rect.height/rect.width));
+        
+        // Apply zoom
+        const delta = -e.deltaY;
+        if (delta > 0) {
+            // Zoom in
+            scale = Math.min(scale * 1.1, maxScale);
+        } else {
+            // Zoom out
+            scale = Math.max(scale / 1.1, minScale);
+        }
+        
+        // Calculate new position to zoom toward mouse
+        translate.x = mouseX - (xPercent * (1000 * scale));
+        translate.y = mouseY - (yPercent * (1000 * scale * (rect.height/rect.width)));
+        
+        updateMapPosition();
+    });
+
+    // Zoom buttons functionality
+    document.getElementById('zoomIn').addEventListener('click', () => {
+        scale = Math.min(scale * 1.2, maxScale);
+        updateMapPosition();
+    });
+
+    document.getElementById('zoomOut').addEventListener('click', () => {
+        scale = Math.max(scale / 1.2, minScale);
+        updateMapPosition();
+    });
+
+    // Reset functionality
+    document.getElementById('resetMap').addEventListener('click', () => {
+        translate = { x: 0, y: 0 };
+        scale = 1;
+        updateMapPosition();
+    });
+
+    // Update map position and scale
+    function updateMapPosition() {
+        panorama.style.backgroundPosition = `${translate.x}px ${translate.y}px`;
+        panorama.style.backgroundSize = `${1000 * scale}px`;
+    }
+});
+document.addEventListener('DOMContentLoaded', function() {
+    const stations = document.querySelectorAll('.radio-station');
+    let currentPlayer = null;
+    
+    stations.forEach(station => {
+        station.addEventListener('click', function() {
+            // Skip if already active
+            if (this.classList.contains('active')) return;
+            
+            // Update UI
+            stations.forEach(s => s.classList.remove('active'));
+            this.classList.add('active');
+            document.getElementById('now-playing').textContent = this.textContent;
+            
+            // Stop current player
+            if (currentPlayer) {
+                const iframe = document.querySelector('#soundcloud-player iframe');
+                if (iframe) {
+                    iframe.src = ''; // Stop playback
+                    iframe.remove();
+                }
+            }
+            
+            // Start new station
+            const playerDiv = document.getElementById('soundcloud-player');
+            const embedUrl = this.getAttribute('data-soundcloud');
+            playerDiv.innerHTML = `
+                <iframe width="100%" height="166" scrolling="no" frameborder="no" 
+                        src="${embedUrl}"></iframe>
+            `;
+            currentPlayer = this;
+            
+            // Play sound effect
+            const clickSound = new Audio('https://www.soundjay.com/buttons/sounds/button-10.mp3');
+            clickSound.volume = 0.3;
+            clickSound.play();
+        });
+    });
+});
+		</script>
+		<style>
+.radio-station {
+    padding: 10px 15px;
+    margin: 8px 0;
+    border: 2px solid #14fe17;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 18px;
+}
+
+.radio-station:hover {
+    background: rgba(20, 254, 23, 0.1);
+    text-shadow: 0 0 5px currentColor;
+}
+
+.radio-station.active {
+    background: #14fe17;
+    color: #272b23;
+    border-color: #14fe17;
+    box-shadow: 0 0 10px #14fe17;
+}
+
+#radio-message {
+    margin-top: 20px;
+    padding: 10px;
+    border-top: 1px solid #14fe17;
+    font-style: italic;
+}
+
+#now-playing {
+    color: #14fe17;
+    font-weight: bold;
+    font-style: normal;
+}
+</style>
+	</body>
+	</html>
